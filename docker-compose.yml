@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: deepinterview_db
+    environment:
+      POSTGRES_DB: deepinterview
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - deepinterview-network
+
+  backend:
+    build: ./backend
+    container_name: deepinterview_backend
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/deepinterview
+      - FRONTEND_URL=http://localhost:3000
+      - BACKEND_URL=http://localhost:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - deepinterview-network
+
+  frontend:
+    build: ./frontend
+    container_name: deepinterview_frontend
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - deepinterview-network
+
+networks:
+  deepinterview-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
